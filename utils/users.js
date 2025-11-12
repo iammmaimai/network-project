@@ -2,11 +2,19 @@ const users =[]
 
 //join user to chat 
 function userJoin(id,username,room){
+    const existingUser = users.find(user =>
+        user.username.toLowerCase() === username.toLowerCase()
+    );
+
+    // If user exists, return an error
+    if (existingUser) {
+        return { error: 'Username is already taken in this room.' };
+    }
     const user = {id,username,room}
 
     users.push(user)
 
-    return user
+    return {user}
 }
 
 //get current user 

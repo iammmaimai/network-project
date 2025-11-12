@@ -16,6 +16,12 @@ const socket = io();
 //Join chatRoom
 socket.emit('joinRoom', {username, room})
 
+// This listens for the error event from the server
+socket.on('joinError', (error) => {
+    alert(error); // Show the error in a popup
+    window.location.href = '/'; // Redirect back to the login page
+});
+
 //get room and users 
 socket.on('roomUsers', ({room,users})=>{
   outputRoomName(room)

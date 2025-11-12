@@ -18,7 +18,11 @@ io.on('connection', socket =>{
     
     socket.on('joinRoom', ({username,room}) =>{
 
-        const user = userJoin(socket.id,username,room)
+        const { error, user } = userJoin(socket.id, username, room);
+        if (error) {
+            // 3. Send an error event back to the client and STOP
+            return socket.emit('joinError', error);
+        }
         socket.join(user.room);
         //Welcome current user
         socket.emit('message', formatMessage(botName , 'Welcome to chatcord')) // emit = only show to the user that login 
