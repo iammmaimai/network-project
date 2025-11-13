@@ -20,13 +20,84 @@
       </header>
       <main class="chat-main">
         <div class="chat-sidebar">
-          <h3><i class="fas fa-comments"></i> Room Name:</h3>
-          <h2 id="room-name"></h2>
-          <h3><i class="fas fa-users"></i> Users</h3>
-          <ul id="users"></ul>
+          <!-- Room Section -->
+          <div class="sidebar-section">
+            <h3><i class="fas fa-door-open"></i> Current Room</h3>
+            <h2 id="room-name" class="clickable"></h2>
+            <h4><i class="fas fa-users"></i> Users in Room</h4>
+            <ul id="users"></ul>
+          </div>
+
+          <!-- Groups Section -->
+          <div class="sidebar-section">
+            <h3><i class="fas fa-users-cog"></i> My Groups</h3>
+            <button id="create-group-btn" class="btn btn-small">
+              <i class="fas fa-plus"></i> Create Group
+            </button>
+            <ul id="my-groups"></ul>
+          </div>
+
+          <!-- All Groups Section -->
+          <div class="sidebar-section">
+            <h3><i class="fas fa-globe"></i> All Groups</h3>
+            <button id="refresh-groups-btn" class="btn btn-small">
+              <i class="fas fa-sync"></i> Refresh
+            </button>
+            <ul id="all-groups"></ul>
+          </div>
+
+          <!-- DM Section -->
+          <div class="sidebar-section">
+            <h3><i class="fas fa-envelope"></i> Direct Messages</h3>
+            <button id="show-dm-users" class="btn btn-small">
+              <i class="fas fa-plus"></i> New DM
+            </button>
+            <ul id="dm-conversations"></ul>
+          </div>
         </div>
+
+        <!-- Create Group Modal -->
+        <div id="create-group-modal" class="modal">
+          <div class="modal-content">
+            <span class="close" data-modal="create-group-modal">&times;</span>
+            <h3>Create New Group</h3>
+            <form id="create-group-form">
+              <input 
+                type="text" 
+                id="group-name-input" 
+                placeholder="Enter group name..." 
+                required 
+                maxlength="30"
+              />
+              <button type="submit" class="btn">Create</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Group Details Modal -->
+        <div id="group-details-modal" class="modal">
+          <div class="modal-content">
+            <span class="close" data-modal="group-details-modal">&times;</span>
+            <h3 id="group-details-name"></h3>
+            <p><strong>Creator:</strong> <span id="group-details-creator"></span></p>
+            <h4>Members (<span id="group-details-member-count"></span>):</h4>
+            <ul id="group-details-members"></ul>
+            <div id="group-actions"></div>
+          </div>
+        </div>
+
+        <!-- DM User Modal -->
+        <div id="dm-modal" class="modal">
+          <div class="modal-content">
+            <span class="close" data-modal="dm-modal">&times;</span>
+            <h3>Select User to Message</h3>
+            <ul id="available-users"></ul>
+          </div>
+        </div>
+
         <div class="chat-messages"></div>
       </main>
+
       <div class="chat-form-container">
         <form id="chat-form">
           <input
@@ -41,12 +112,20 @@
       </div>
     </div>
 
-    <script
-      src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.2/qs.min.js"
-      integrity="sha256-TDxXjkAUay70ae/QJBEpGKkpVslXaHHayklIVglFRT4="
-      crossorigin="anonymous"
-    ></script>
+    <!-- ---------------- SCRIPT LOADING ---------------- -->
+
+    <!-- 1. Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qs/6.9.2/qs.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+
+    <!-- 2. Helper functions -->
+    <script src="js/uiHelpers.js"></script>
+
+    <!-- 3. Managers -->
+    <script src="js/groupManager.js"></script>
+    <script src="js/dmManager.js"></script>
+
+    <!-- 4. Main script (load last) -->
     <script src="js/main.js"></script>
   </body>
 </html>
