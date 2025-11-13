@@ -30,6 +30,19 @@ app.use(express.static(path.join(__dirname,'public'))); //dirname = current dire
 
 const botName = "Chatcord HR"
 
+// Helper function to broadcast server stats to all users
+function broadcastServerStats() {
+    const allUsers = getAllUsers();
+    io.emit('serverStats', {
+        totalUsers: allUsers.length,
+        allUsers: allUsers.map(u => ({ 
+            id: u.id, 
+            username: u.username, 
+            room: u.room 
+        }))
+    });
+}
+
 //Run when client connect 
 io.on('connection', socket =>{
     
@@ -49,12 +62,16 @@ io.on('connection', socket =>{
             .to(user.room)
             .emit('message', formatMessage(botName, ` ${user.username} has joined the chat`)) // broadcast.emit = show to everone execpt the user who logging in 
 
+        // Send room users to the room
         io
             .to(user.room)
             .emit('roomUsers', {
                 room:user.room,
                 users:getRoomUsers(user.room)
             })
+        
+        // Broadcast server stats to ALL users (including the one who just joined)
+        broadcastServerStats();
     })
     
     //Listen for chatMessage
@@ -74,12 +91,29 @@ io.on('connection', socket =>{
                 .to(user.room)
                 .emit('message', formatMessage(botName ,` ${user.username} has left the chat`)) //show to every user
             
+            // Send updated room users
             io
                 .to(user.room)
                 .emit('roomUsers', {
                     room:user.room,
                     users:getRoomUsers(user.room)
-                })        
+                })
+            
+            // Broadcast updated server stats to ALL users
+            broadcastServerStats();
+            
+            // Handle group disconnects
+            const userGroups = getUserGroups(user.id);
+            userGroups.forEach(group => {
+                removeMemberFromGroup(group.id, user.id);
+                io.to(group.id).emit('groupMessage', {
+                    groupId: group.id,
+                    message: formatMessage(botName, `${user.username} disconnected`)
+                });
+            });
+            
+            // Update group list
+            io.emit('groupListUpdated', getAllGroups());
         }
     })
 
@@ -135,6 +169,21 @@ io.on('connection', socket =>{
             socket.emit('allUsersList', allUsers);
         }
     });
+    
+    // Get active rooms with user counts (for index.html)
+    socket.on('getActiveRooms', () => {
+        const allUsers = getAllUsers();
+        const roomCounts = {};
+        
+        allUsers.forEach(user => {
+            if (user.room) {
+                roomCounts[user.room] = (roomCounts[user.room] || 0) + 1;
+            }
+        });
+        
+        socket.emit('activeRooms', roomCounts);
+    });
+    
     // Create a new group
     socket.on('createGroup', ({ groupName }) => {
         const user = getCurrentUser(socket.id);
@@ -273,36 +322,7 @@ io.on('connection', socket =>{
             }
         }
     });
-
-    // Update disconnect to handle group cleanup
-    socket.on('disconnect', () => {
-        const user = userLeave(socket.id);
-        
-        if (user) {
-            // Handle room disconnect
-            io.to(user.room).emit('message', formatMessage(botName, `${user.username} has left the chat`));
-            io.to(user.room).emit('roomUsers', {
-                room: user.room,
-                users: getRoomUsers(user.room)
-            });
-            
-            // Handle group disconnects
-            const userGroups = getUserGroups(user.id);
-            userGroups.forEach(group => {
-                removeMemberFromGroup(group.id, user.id);
-                io.to(group.id).emit('groupMessage', {
-                    groupId: group.id,
-                    message: formatMessage(botName, `${user.username} disconnected`)
-                });
-            });
-            
-            // Update group list
-            io.emit('groupListUpdated', getAllGroups());
-        }
-    });
 })
-
-
 
 //PORT
 const PORT = 1573 || process.env.PORT;

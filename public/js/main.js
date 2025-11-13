@@ -2,6 +2,8 @@ const chatForm = document.getElementById('chat-form');
 const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
+const totalUsersCount = document.getElementById('total-users-count');
+const totalUsersList = document.getElementById('total-users-list');
 
 // Get username and room from URL
 const { username, room } = Qs.parse(location.search, {
@@ -11,7 +13,6 @@ const { username, room } = Qs.parse(location.search, {
 // Global state
 window.chatMode = 'room'; // 'room', 'group', or 'dm'
 let roomMessages = [];
-
 const socket = io();
 
 // Initialize managers
@@ -33,6 +34,11 @@ socket.on('roomUsers', ({ room, users }) => {
     outputUsers(users);
 });
 
+// Listen for server stats (total users online)
+socket.on('serverStats', ({ totalUsers, allUsers }) => {
+    outputServerStats(totalUsers, allUsers);
+});
+
 // Message from server
 socket.on('message', message => {
     if (window.chatMode === 'room') {
@@ -48,13 +54,11 @@ socket.on('connect', () => {
         dmManager = new DMManager(socket);
         window.managersInitialized = true;
     }
-
     // Initialize modals only once
     if (!window.modalsInitialized) {
         initializeModals();
         window.modalsInitialized = true;
     }
-
     // Load groups (can run every connect)
     groupManager.initialize();
 });
@@ -62,10 +66,9 @@ socket.on('connect', () => {
 // Message submit
 chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
-
     const msg = e.target.elements.msg.value.trim();
     if (!msg) return;
-
+    
     // Route message based on mode
     if (window.chatMode === 'group') {
         groupManager.sendMessage(msg);
@@ -74,7 +77,7 @@ chatForm.addEventListener('submit', (e) => {
     } else {
         socket.emit('chatMessage', msg);
     }
-
+    
     e.target.elements.msg.value = '';
     e.target.elements.msg.focus();
 });
@@ -101,7 +104,7 @@ function outputRoomName(room) {
     roomName.innerHTML = `${room} <span class="chat-mode-indicator mode-room">ROOM</span>`;
 }
 
-// Add users to DOM
+// Add users to DOM (users in current room)
 function outputUsers(users) {
     userList.innerHTML = '';
     users.forEach((user) => {
@@ -110,6 +113,30 @@ function outputUsers(users) {
         li.dataset.id = user.id;
         userList.appendChild(li);
     });
+}
+
+// Add server stats to DOM (total users online)
+function outputServerStats(totalUsers, allUsers) {
+    // Update the count
+    if (totalUsersCount) {
+        totalUsersCount.innerText = totalUsers;
+    }
+    
+    // Update the list
+    if (totalUsersList) {
+        totalUsersList.innerHTML = '';
+        allUsers.forEach((user) => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div>
+                    <span class="user-name">${user.username}</span>
+                    <span class="user-room">${user.room}</span>
+                </div>
+            `;
+            li.dataset.id = user.id;
+            totalUsersList.appendChild(li);
+        });
+    }
 }
 
 // Switch to room
