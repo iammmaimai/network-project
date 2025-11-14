@@ -167,7 +167,6 @@ class GroupManager {
                 <div class="group-item-header">
                     <span class="group-item-name">
                         ${group.name}
-                        ${isCreator ? '<span class="group-badge creator-badge">Creator</span>' : ''}
                     </span>
                 </div>
                 <div class="group-item-members">
@@ -197,7 +196,6 @@ class GroupManager {
                 <div class="group-item-header">
                     <span class="group-item-name">
                         ${group.name}
-                        ${isMember ? '<span class="group-badge">Joined</span>' : ''}
                     </span>
                 </div>
                 <div class="group-item-members">
