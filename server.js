@@ -75,6 +75,22 @@ io.on('connection', socket =>{
         // Broadcast server stats to ALL users (including the one who just joined)
         broadcastServerStats();
     })
+
+    // Listen for client-side chat context changes
+    socket.on('updateUserChatContext', ({ type, name }) => {
+        const user = getCurrentUser(socket.id);
+        if (user) {
+            if (type === 'group'){
+                user.group = name;
+            } else if (type === 'dm') {
+                user.group = "DM with someone";
+            } else if (type === 'room') {
+                user.group = "Main room";
+            }
+
+            broadcastServerStats();
+        }
+    })
     
     //Listen for chatMessage
     socket.on('chatMessage', msg =>{
@@ -207,6 +223,9 @@ io.on('connection', socket =>{
             
             // Broadcast updated group list to all users
             io.emit('groupListUpdated', getAllGroups());
+
+            user.group = group.name;
+            broadcastServerStats();
         }
     });
 

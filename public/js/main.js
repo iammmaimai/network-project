@@ -234,6 +234,8 @@ function switchToRoom() {
     document.querySelector('.chat-messages').innerHTML = '';
     roomMessages.forEach(msg => outputMessage(msg));
     outputRoomName(room);
+
+    socket.emit('updateUserChatContext', { type: 'room' });
 }
 
 // Click room name to return to room

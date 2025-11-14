@@ -99,6 +99,8 @@ class DMManager {
         roomNameEl.innerHTML = `DM: ${dmData.otherUser.username} <span class="chat-mode-indicator mode-dm">DM</span>`;
         
         this.updateDmList();
+
+        this.socket.emit('updateUserChatContext', { type: 'dm', name: '' });
     }
 
     sendMessage(message) {

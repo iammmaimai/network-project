@@ -331,6 +331,8 @@ class GroupManager {
         // roomNameEl.innerHTML = `${group.name} <span class="chat-mode-indicator mode-group">GROUP</span>`;
         
         this.updateMyGroupsList();
+
+        this.socket.emit('updateUserChatContext', { type: 'group', name: group.name });
     }
 
     sendMessage(message) {
