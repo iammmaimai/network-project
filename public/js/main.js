@@ -8,6 +8,10 @@ const totalUsersList = document.getElementById('total-users-list');
 const msgInput = document.getElementById('msg');
 const emojiBtn = document.getElementById('emoji-btn');
 const emojiPicker = document.getElementById('emoji-picker');
+// Image upload
+const imageBtn = document.getElementById('image-btn');
+const imageInput = document.getElementById('image-input');
+let selectedImage = null;
 
 // Get username and room from URL
 const { username, room } = Qs.parse(location.search, {
@@ -72,6 +76,45 @@ socket.on('connect', () => {
     groupManager.initialize();
 });
 
+// Image upload handler
+if (imageBtn && imageInput) {
+    imageBtn.addEventListener('click', () => {
+        imageInput.click();
+    });
+
+    imageInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file type
+            if (!file.type.startsWith('image/')) {
+                alert('Please select an image file');
+                return;
+            }
+            
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Image size must be less than 5MB');
+                imageInput.value = '';
+                return;
+            }
+
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                selectedImage = {
+                    data: event.target.result,
+                    type: file.type,
+                    name: file.name
+                };
+                // Show preview or indicator
+                imageBtn.style.background = 'var(--success-color)';
+                imageBtn.title = 'Image selected - Click to change';
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
 //Emoji picker
 // ---------- Emoji button + picker logic ----------
 if (emojiBtn && emojiPicker && msgInput) {
@@ -105,18 +148,32 @@ if (emojiBtn && emojiPicker && msgInput) {
 chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const msg = e.target.elements.msg.value.trim();
-    if (!msg) return;
+    const hasImage = selectedImage !== null;
+    
+    // Must have either text or image
+    if (!msg && !hasImage) return;
+    
+    // Prepare message data
+    const messageData = {
+        text: msg || '',
+        image: hasImage ? selectedImage : null
+    };
     
     // Route message based on mode
     if (window.chatMode === 'group') {
-        groupManager.sendMessage(msg);
+        groupManager.sendMessage(messageData);
     } else if (window.chatMode === 'dm') {
-        dmManager.sendMessage(msg);
+        dmManager.sendMessage(messageData);
     } else {
-        socket.emit('chatMessage', msg);
+        socket.emit('chatMessage', messageData);
     }
     
+    // Reset form
     e.target.elements.msg.value = '';
+    selectedImage = null;
+    imageInput.value = '';
+    imageBtn.style.background = '';
+    imageBtn.title = 'Upload Image';
     e.target.elements.msg.focus();
 });
 //SpeakText Jaaa; Pik
@@ -153,33 +210,89 @@ function outputMessage(message) {
     p.innerHTML += `<span> ${formattedTime}</span>`;
     div.appendChild(p);
 
-    // --- Create wrapper row for message + button ---
+    // --- Create wrapper for message content ---
     const wrapper = document.createElement('div');
     wrapper.style.display = 'flex';
-    wrapper.style.alignItems = 'center';
+    wrapper.style.flexDirection = 'column';
     wrapper.style.gap = '8px';
 
-    // The message text
-    const para = document.createElement('p');
-    para.classList.add('text');
-    para.innerText = message.text;
-    wrapper.appendChild(para);
+    // The image (if exists) - goes on its own row
+    if (message.image) {
+        const imgContainer = document.createElement('div');
+        imgContainer.classList.add('message-image-container');
+        
+        const img = document.createElement('img');
+        img.src = message.image.data;
+        img.alt = message.image.name || 'Image';
+        img.classList.add('message-image');
+        img.style.maxWidth = '300px';
+        img.style.maxHeight = '300px';
+        img.style.borderRadius = '8px';
+        img.style.cursor = 'pointer';
+        
+        // Click to view full size
+        img.addEventListener('click', () => {
+            const modal = document.createElement('div');
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            modal.style.backgroundColor = 'rgba(0,0,0,0.9)';
+            modal.style.display = 'flex';
+            modal.style.justifyContent = 'center';
+            modal.style.alignItems = 'center';
+            modal.style.zIndex = '10000';
+            modal.style.cursor = 'pointer';
+            
+            const fullImg = document.createElement('img');
+            fullImg.src = message.image.data;
+            fullImg.style.maxWidth = '90%';
+            fullImg.style.maxHeight = '90%';
+            fullImg.style.objectFit = 'contain';
+            
+            modal.appendChild(fullImg);
+            document.body.appendChild(modal);
+            
+            modal.addEventListener('click', () => {
+                document.body.removeChild(modal);
+            });
+        });
+        
+        imgContainer.appendChild(img);
+        wrapper.appendChild(imgContainer);
+    }
 
-    // The TTS button 🔊
-    const ttsBtn = document.createElement('button');
-    ttsBtn.classList.add('tts-btn');
-    ttsBtn.innerText = "🔊";
-    ttsBtn.style.border = "none";
-    ttsBtn.style.background = "transparent";
-    ttsBtn.style.cursor = "pointer";
-    ttsBtn.style.fontSize = "18px";
+    // Text and TTS button row (only if there's text)
+    if (message.text) {
+        const textRow = document.createElement('div');
+        textRow.style.display = 'flex';
+        textRow.style.alignItems = 'center';
+        textRow.style.gap = '8px';
 
-    // When clicked → speak the message
-    ttsBtn.addEventListener('click', () => {
-        speakText(message.text, 'en-US');   // change to 'th-TH' if you prefer Thai voice
-    });
+        // The message text
+        const para = document.createElement('p');
+        para.classList.add('text');
+        para.innerText = message.text;
+        textRow.appendChild(para);
 
-    wrapper.appendChild(ttsBtn);
+        // The TTS button 🔊
+        const ttsBtn = document.createElement('button');
+        ttsBtn.classList.add('tts-btn');
+        ttsBtn.innerText = "🔊";
+        ttsBtn.style.border = "none";
+        ttsBtn.style.background = "transparent";
+        ttsBtn.style.cursor = "pointer";
+        ttsBtn.style.fontSize = "18px";
+
+        // When clicked → speak the message
+        ttsBtn.addEventListener('click', () => {
+            speakText(message.text, 'en-US');   // change to 'th-TH' if you prefer Thai voice
+        });
+
+        textRow.appendChild(ttsBtn);
+        wrapper.appendChild(textRow);
+    }
 
     // Add wrapper into message div
     div.appendChild(wrapper);

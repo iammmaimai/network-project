@@ -94,11 +94,11 @@ io.on('connection', socket =>{
     })
     
     //Listen for chatMessage
-    socket.on('chatMessage', msg =>{
+    socket.on('chatMessage', messageData =>{
         const user = getCurrentUser(socket.id)
         io
             .to(user.room)
-            .emit('message',formatMessage(user.username,msg))
+            .emit('message', formatMessage(user.username, messageData))
     })
 
      //Run when the client disconnect 

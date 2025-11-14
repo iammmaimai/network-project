@@ -158,6 +158,25 @@ a {
     color: #666;
 }
 
+/* Image message styling */
+.message-image-container {
+    margin: 5px 0;
+}
+
+.message-image {
+    max-width: 300px;
+    max-height: 300px;
+    border-radius: 8px;
+    object-fit: cover;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.message-image:hover {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
 .chat-form-container {
     padding: 20px 30px;
     background-color: var(--dark-color-a);
