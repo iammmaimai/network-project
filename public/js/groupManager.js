@@ -43,7 +43,7 @@ class GroupManager {
             this.saveGroups();
             
             this.updateMyGroupsList();
-            this.switchToGroup(group.id);
+            this.switchToGroup(group);
             window.showNotification(`Group "${group.name}" created!`, 'success');
         });
 
@@ -75,16 +75,16 @@ class GroupManager {
                 this.myGroups.push(group);
             }
             
+            if (!this.allGroups.find(g => g.id === group.id)) {
+                this.allGroups.push(group);
+            }
+
             if (!this.groupMessages.has(group.id)) {
                 this.groupMessages.set(group.id, []);
             }
-
-            this.user.group = group.name;
-            this.socket.emit('userGroupUpdated', { userId: this.user.id, groupName: this.user.group });
-
             
             this.updateMyGroupsList();
-            this.switchToGroup(group.id);
+            this.switchToGroup(group);
             window.showNotification(`Joined "${group.name}"`, 'success');
         });
 
@@ -203,7 +203,7 @@ class GroupManager {
                 </div>
             `;
             
-            li.addEventListener('click', () => this.switchToGroup(group.id));
+            li.addEventListener('click', () => this.switchToGroup(group));
             list.appendChild(li);
         });
     }
@@ -272,7 +272,7 @@ class GroupManager {
             openBtn.className = 'btn';
             openBtn.innerHTML = '<i class="fas fa-comments"></i> Open';
             openBtn.onclick = () => {
-                this.switchToGroup(group.id);
+                this.switchToGroup(group);
                 modal.style.display = 'none';
             };
             actions.appendChild(openBtn);
@@ -320,11 +320,10 @@ class GroupManager {
 
     // ========== CHAT SWITCHING ==========
     
-    switchToGroup(groupId) {
-        const group = this.allGroups.find(g => g.id === groupId);
+    switchToGroup(group) {
         if (!group) return;
         
-        this.currentGroupId = groupId;
+        this.currentGroupId = group.id;
         window.chatMode = 'group';
         
         this.socket.emit('userGroupUpdated', { userId: this.user.id, groupName: this.user.group });
@@ -333,11 +332,11 @@ class GroupManager {
         document.querySelector('.chat-messages').innerHTML = '';
 
         
-        const messages = this.groupMessages.get(groupId) || [];
+        const messages = this.groupMessages.get(group.id) || [];
         messages.forEach(msg => window.outputMessage(msg));
         
-        // const roomNameEl = document.getElementById('room-name');
-        // roomNameEl.innerHTML = `${group.name} <span class="chat-mode-indicator mode-group">GROUP</span>`;
+        const roomNameEl = document.getElementById('room-name');
+        roomNameEl.innerHTML = `${group.name} <span class="chat-mode-indicator mode-group">GROUP</span>`;
         
                 // Clear active state from DMs when switching to group
         if (window.dmManager) {
