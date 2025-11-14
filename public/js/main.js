@@ -36,6 +36,7 @@ socket.on('roomUsers', ({ room, users }) => {
 
 // Listen for server stats (total users online)
 socket.on('serverStats', ({ totalUsers, allUsers }) => {
+    console.log(allUsers)
     outputServerStats(totalUsers, allUsers);
 });
 
@@ -127,6 +128,8 @@ function outputServerStats(totalUsers, allUsers) {
         totalUsersList.innerHTML = '';
         allUsers.forEach((user) => {
             const li = document.createElement('li');
+            console.log(user.room)
+            console.log(user.group)
             li.innerHTML = `
                 <div>
                     <span class="user-name">${user.username}</span>

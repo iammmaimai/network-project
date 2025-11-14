@@ -38,7 +38,8 @@ function broadcastServerStats() {
         allUsers: allUsers.map(u => ({ 
             id: u.id, 
             username: u.username, 
-            room: u.room 
+            room: u.room,
+            group:u.group
         }))
     });
 }
@@ -46,9 +47,9 @@ function broadcastServerStats() {
 //Run when client connect 
 io.on('connection', socket =>{
     
-    socket.on('joinRoom', ({username,room}) =>{
+    socket.on('joinRoom', ({username,room,group}) =>{
 
-        const { error, user } = userJoin(socket.id, username, room);
+        const { error, user } = userJoin(socket.id, username, room,group);
         if (error) {
             // 3. Send an error event back to the client and STOP
             return socket.emit('joinError', error);
@@ -164,7 +165,7 @@ io.on('connection', socket =>{
         if (currentUser) {
             const allUsers = getAllUsers()
                 .filter(u => u.id !== socket.id)
-                .map(u => ({ id: u.id, username: u.username, room: u.room, group: u.group||null}));
+                .map(u => ({ id: u.id, username: u.username, room: u.room, group:u.group||null}));
             
             socket.emit('allUsersList', allUsers);
         }
@@ -248,6 +249,8 @@ io.on('connection', socket =>{
                 
                 // Update group list for everyone
                 io.emit('groupListUpdated', getAllGroups());
+
+                broadcastServerStats();
             } else {
                 socket.emit('groupMessage', {
                     groupId,

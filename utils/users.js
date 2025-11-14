@@ -10,7 +10,7 @@ function userJoin(id,username,room){
     if (existingUser) {
         return { error: 'Username is already taken in this room.' };
     }
-    const user = {id,username,room}
+    const user = {id,username,room, group: null}
 
     users.push(user)
 
@@ -35,7 +35,12 @@ function getRoomUsers(room){
 }
 
 function getAllUsers(){
-    return users
+    return users.map(u => ({
+        id: u.id,
+        username: u.username,
+        room: u.room,
+        group: u.group 
+    }));
 }
 module.exports ={
     userJoin,
