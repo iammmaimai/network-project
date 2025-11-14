@@ -135,11 +135,18 @@ function outputMessage(message) {
     const div = document.createElement('div');
     div.classList.add('message');
 
+    const messageTime = new Date(message.time);
+
+    const formattedTime = messageTime.toLocaleTimeString([], { 
+        hour: 'numeric', 
+        minute: '2-digit' 
+    });
+
     // Username + time
     const p = document.createElement('p');
     p.classList.add('meta');
     p.innerText = message.username;
-    p.innerHTML += `<span> ${message.time}</span>`;
+    p.innerHTML += `<span> ${formattedTime}</span>`;
     div.appendChild(p);
 
     // --- Create wrapper row for message + button ---
