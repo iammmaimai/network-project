@@ -8,6 +8,10 @@ const totalUsersList = document.getElementById('total-users-list');
 const msgInput = document.getElementById('msg');
 const emojiBtn = document.getElementById('emoji-btn');
 const emojiPicker = document.getElementById('emoji-picker');
+// File upload
+const fileBtn = document.getElementById('file-btn');
+const fileInput = document.getElementById('file-input');
+let selectedFile = null;
 // Image upload
 const imageBtn = document.getElementById('image-btn');
 const imageInput = document.getElementById('image-input');
@@ -76,6 +80,46 @@ socket.on('connect', () => {
     groupManager.initialize();
 });
 
+// File upload handler
+if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', () => {
+        fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            // Validate file size (max 10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                alert('File size must be less than 10MB');
+                fileInput.value = '';
+                return;
+            }
+
+            // Clear image if file is selected
+            selectedImage = null;
+            imageInput.value = '';
+            imageBtn.style.background = '';
+            imageBtn.title = 'Upload Image';
+
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                selectedFile = {
+                    data: event.target.result,
+                    type: file.type,
+                    name: file.name,
+                    size: file.size
+                };
+                // Show indicator
+                fileBtn.style.background = 'var(--success-color)';
+                fileBtn.title = `${file.name} selected - Click to change`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
 // Image upload handler
 if (imageBtn && imageInput) {
     imageBtn.addEventListener('click', () => {
@@ -97,6 +141,12 @@ if (imageBtn && imageInput) {
                 imageInput.value = '';
                 return;
             }
+
+            // Clear file if image is selected
+            selectedFile = null;
+            fileInput.value = '';
+            fileBtn.style.background = '';
+            fileBtn.title = 'Upload File';
 
             // Convert to base64
             const reader = new FileReader();
@@ -149,14 +199,16 @@ chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const msg = e.target.elements.msg.value.trim();
     const hasImage = selectedImage !== null;
+    const hasFile = selectedFile !== null;
     
-    // Must have either text or image
-    if (!msg && !hasImage) return;
+    // Must have either text, image, or file
+    if (!msg && !hasImage && !hasFile) return;
     
     // Prepare message data
     const messageData = {
         text: msg || '',
-        image: hasImage ? selectedImage : null
+        image: hasImage ? selectedImage : null,
+        file: hasFile ? selectedFile : null
     };
     
     // Route message based on mode
@@ -171,9 +223,13 @@ chatForm.addEventListener('submit', (e) => {
     // Reset form
     e.target.elements.msg.value = '';
     selectedImage = null;
+    selectedFile = null;
     imageInput.value = '';
+    fileInput.value = '';
     imageBtn.style.background = '';
+    fileBtn.style.background = '';
     imageBtn.title = 'Upload Image';
+    fileBtn.title = 'Upload File';
     e.target.elements.msg.focus();
 });
 //SpeakText Jaaa; Pik
@@ -261,6 +317,45 @@ function outputMessage(message) {
         
         imgContainer.appendChild(img);
         wrapper.appendChild(imgContainer);
+    }
+
+    // The file (if exists) - goes on its own row
+    if (message.file) {
+        const fileContainer = document.createElement('div');
+        fileContainer.classList.add('message-file-container');
+        
+        const fileLink = document.createElement('a');
+        fileLink.href = message.file.data;
+        fileLink.download = message.file.name;
+        fileLink.classList.add('message-file-link');
+        
+        // File icon based on type
+        let fileIcon = 'fa-file';
+        if (message.file.type) {
+            if (message.file.type.includes('pdf')) fileIcon = 'fa-file-pdf';
+            else if (message.file.type.includes('word') || message.file.type.includes('document')) fileIcon = 'fa-file-word';
+            else if (message.file.type.includes('excel') || message.file.type.includes('spreadsheet')) fileIcon = 'fa-file-excel';
+            else if (message.file.type.includes('zip') || message.file.type.includes('archive')) fileIcon = 'fa-file-archive';
+            else if (message.file.type.includes('text')) fileIcon = 'fa-file-alt';
+        }
+        
+        // Format file size
+        const formatFileSize = (bytes) => {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+        };
+        
+        fileLink.innerHTML = `
+            <i class="fas ${fileIcon}"></i>
+            <span class="file-name">${message.file.name}</span>
+            <span class="file-size">${formatFileSize(message.file.size)}</span>
+        `;
+        
+        fileContainer.appendChild(fileLink);
+        wrapper.appendChild(fileContainer);
     }
 
     // Text and TTS button row (only if there's text)
