@@ -21,6 +21,7 @@ const {
     deleteGroup,
     getUserGroups
 } = require('./utils/groups');
+const { send } = require('process');
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server);
@@ -144,6 +145,9 @@ io.on('connection', socket =>{
             // Create a unique room ID for this DM (sorted to ensure consistency)
             const dmRoomId = [sender.id, receiver.id].sort().join('-');
             
+            socket.join(dmRoomId);
+            io.sockets.sockets.get(receiver.id)?.join(dmRoomId);
+
             // Notify both users about the DM room
             socket.emit('privateChatReady', {
                 dmRoomId,
@@ -162,17 +166,11 @@ io.on('connection', socket =>{
         const sender = getCurrentUser(socket.id);
         
         if (sender) {
-            // Extract both user IDs from the dmRoomId
-            const userIds = dmRoomId.split('-');
-            
-            // Send to both participants
-            userIds.forEach(userId => {
-                io.to(userId).emit('privateMessageReceived', {
-                    dmRoomId,
-                    message: formatMessage(sender.username, message),
-                    senderId: sender.id
-                });
-            });
+            io.to(dmRoomId).emit('privateMessageReceived', {
+                dmRoomId,
+                message: formatMessage(sender.username, message),
+                senderId: sender.id
+            })
         }
     });
 
