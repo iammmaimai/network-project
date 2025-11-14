@@ -40,14 +40,47 @@ a {
 }
 
 /* Chat Page */
-.chat-container {
-    max-width: 1100px;
-    background: white;
-    margin: 30px auto;
-    overflow: hidden;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+.chat-form-container {
+    position: relative;
+  }
+  
+  /* emoji picker panel */
+  .emoji-picker {
+    position: absolute;
+    bottom: 55px;             /* adjust to fit above the form */
+    left: 10px;
+    background: #fff;
+    border: 1px solid #ccc;
+    padding: 6px;
     border-radius: 5px;
-}
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    z-index: 10;
+  }
+  
+  .emoji-picker.hidden {
+    display: none;
+  }
+  
+  .emoji-item {
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+  }
+  
+  .emoji-item:hover {
+    transform: scale(1.2);
+  }
+  
+  .btn-emoji {
+    margin: 0 6px;
+    padding: 0 10px;
+  }
+  
 
 .chat-header {
     background: var(--dark-color-a);

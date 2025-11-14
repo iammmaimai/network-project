@@ -4,6 +4,10 @@ const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 const totalUsersCount = document.getElementById('total-users-count');
 const totalUsersList = document.getElementById('total-users-list');
+//Add emoji
+const msgInput = document.getElementById('msg');
+const emojiBtn = document.getElementById('emoji-btn');
+const emojiPicker = document.getElementById('emoji-picker');
 
 // Get username and room from URL
 const { username, room } = Qs.parse(location.search, {
@@ -64,6 +68,35 @@ socket.on('connect', () => {
     groupManager.initialize();
 });
 
+//Emoji picker
+// ---------- Emoji button + picker logic ----------
+if (emojiBtn && emojiPicker && msgInput) {
+    // Toggle picker show/hide
+    emojiBtn.addEventListener('click', () => {
+        emojiPicker.classList.toggle('hidden');
+    });
+
+    // Click on emoji → append to input
+    emojiPicker.addEventListener('click', (e) => {
+        if (e.target.classList.contains('emoji-item')) {
+            const emoji = e.target.textContent;
+            msgInput.value += emoji;
+            msgInput.focus();
+        }
+    });
+
+    // Optional: click outside to close picker
+    document.addEventListener('click', (e) => {
+        const clickedInside =
+            emojiPicker.contains(e.target) || emojiBtn.contains(e.target);
+        if (!clickedInside) {
+            emojiPicker.classList.add('hidden');
+        }
+    });
+}
+
+
+
 // Message submit
 chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -82,23 +115,69 @@ chatForm.addEventListener('submit', (e) => {
     e.target.elements.msg.value = '';
     e.target.elements.msg.focus();
 });
+//SpeakText Jaaa; Pik
+function speakText(text, lang = 'en-US') {
+    if (!('speechSynthesis' in window)) {
+        alert('Sorry, your browser does not support text to speech.');
+        return;
+    }
 
-// Output message to DOM
+    // Stop any ongoing speech
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = lang;  // 'en-US' or 'th-TH'
+    window.speechSynthesis.speak(utterance);
+}
+
+// Output message to DOM ; modified by Pik in case u wanna ask or change anything ja
 function outputMessage(message) {
     const div = document.createElement('div');
     div.classList.add('message');
+
+    // Username + time
     const p = document.createElement('p');
     p.classList.add('meta');
     p.innerText = message.username;
     p.innerHTML += `<span> ${message.time}</span>`;
     div.appendChild(p);
+
+    // --- Create wrapper row for message + button ---
+    const wrapper = document.createElement('div');
+    wrapper.style.display = 'flex';
+    wrapper.style.alignItems = 'center';
+    wrapper.style.gap = '8px';
+
+    // The message text
     const para = document.createElement('p');
     para.classList.add('text');
     para.innerText = message.text;
-    div.appendChild(para);
-    document.querySelector('.chat-messages').appendChild(div);
+    wrapper.appendChild(para);
+
+    // The TTS button 🔊
+    const ttsBtn = document.createElement('button');
+    ttsBtn.classList.add('tts-btn');
+    ttsBtn.innerText = "🔊";
+    ttsBtn.style.border = "none";
+    ttsBtn.style.background = "transparent";
+    ttsBtn.style.cursor = "pointer";
+    ttsBtn.style.fontSize = "18px";
+
+    // When clicked → speak the message
+    ttsBtn.addEventListener('click', () => {
+        speakText(message.text, 'en-US');   // change to 'th-TH' if you prefer Thai voice
+    });
+
+    wrapper.appendChild(ttsBtn);
+
+    // Add wrapper into message div
+    div.appendChild(wrapper);
+
+    // Append final message block
+    chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
 }
+
 
 // Add room name to DOM
 function outputRoomName(room) {
