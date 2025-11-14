@@ -8,7 +8,8 @@ const {
     getCurrentUser,
     userLeave,
     getRoomUsers,
-    getAllUsers
+    getAllUsers,
+    getUserByUsername
 } =require('./utils/users');
 
 const {
@@ -137,13 +138,13 @@ io.on('connection', socket =>{
     })
 
     // Handle private message request
-    socket.on('requestPrivateChat', ({ targetUserId }) => {
+    socket.on('requestPrivateChat', ({ targetUsername }) => {
         const sender = getCurrentUser(socket.id);
-        const receiver = getCurrentUser(targetUserId);
+        const receiver = getUserByUsername(targetUsername);
         
         if (sender && receiver) {
             // Create a unique room ID for this DM (sorted to ensure consistency)
-            const dmRoomId = [sender.id, receiver.id].sort().join('-');
+            const dmRoomId = [sender.username, receiver.username].sort().join('-');
             
             socket.join(dmRoomId);
             io.sockets.sockets.get(receiver.id)?.join(dmRoomId);
@@ -154,7 +155,7 @@ io.on('connection', socket =>{
                 otherUser: { id: receiver.id, username: receiver.username }
             });
             
-            io.to(targetUserId).emit('privateChatReady', {
+            io.to(receiver.id).emit('privateChatReady', {
                 dmRoomId,
                 otherUser: { id: sender.id, username: sender.username }
             });

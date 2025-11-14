@@ -4,10 +4,16 @@ class DMManager {
     constructor(socket) {
         this.socket = socket;
         this.currentDmRoom = null;
-        this.dmConversations = new Map();
+
+        this.loadDMs();
+
+        if(!this.dmConversations) 
+            this.dmConversations = new Map();
         
         this.initializeEventListeners();
         this.initializeSocketListeners();
+
+        this.updateDmList();
     }
 
     // ========== SOCKET LISTENERS ==========
@@ -22,7 +28,7 @@ class DMManager {
                 const li = document.createElement('li');
                 li.textContent = `${user.username} (${user.room})`;
                 li.addEventListener('click', () => {
-                    this.socket.emit('requestPrivateChat', { targetUserId: user.id });
+                    this.socket.emit('requestPrivateChat', { targetUsername: user.username });
                     document.getElementById('dm-modal').style.display = 'none';
                 });
                 list.appendChild(li);
@@ -37,7 +43,11 @@ class DMManager {
                     messages: []
                 });
                 this.updateDmList();
+            } else {
+                this.dmConversations.get(dmRoomId).otherUser = otherUser;
             }
+            this.saveDMs();
+            this.updateDmList();
             this.switchToDm(dmRoomId);
         });
 
@@ -49,6 +59,8 @@ class DMManager {
             
             const dmData = this.dmConversations.get(dmRoomId);
             dmData.messages.push(message);
+
+            this.saveDMs();
             
             if (this.currentDmRoom === dmRoomId && window.chatMode === 'dm') {
                 window.outputMessage(message);
@@ -119,6 +131,19 @@ class DMManager {
                 dmRoomId: this.currentDmRoom, 
                 message 
             });
+        }
+    }
+
+    saveDMs() {
+        const dmObject = Object.fromEntries(this.dmConversations);
+        localStorage.setItem('dmConversations', JSON.stringify(dmObject));
+    }
+
+    loadDMs() {
+        const savedDMS = localStorage.getItem('dmConversations');
+        if (savedDMS) {
+            const dmObject = JSON.parse(savedDMS);
+            this.dmConversations = new Map(Object.entries(dmObject));
         }
     }
 }

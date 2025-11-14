@@ -22,10 +22,13 @@ const { username, room } = Qs.parse(location.search, {
     ignoreQueryPrefix: true,
 });
 
+
 // Global state
 window.chatMode = 'room'; // 'room', 'group', or 'dm'
-let roomMessages = [];
+let roomMessages = loadRoomMessages();
 const socket = io();
+
+roomMessages.forEach(msg => outputMessage(msg));
 
 // Initialize managers
 let groupManager;
@@ -57,6 +60,7 @@ socket.on('message', message => {
     if (window.chatMode === 'room') {
         outputMessage(message);
         roomMessages.push(message);
+        saveRoomMessages();
     }
 });
 
@@ -65,7 +69,7 @@ socket.on('connect', () => {
     if (!window.managersInitialized) {
         groupManager = new GroupManager(socket);
         dmManager = new DMManager(socket);
-
+        
         window.groupManager = groupManager;
         window.dmManager = dmManager;
         
@@ -172,7 +176,7 @@ if (emojiBtn && emojiPicker && msgInput) {
     emojiBtn.addEventListener('click', () => {
         emojiPicker.classList.toggle('hidden');
     });
-
+    
     // Click on emoji → append to input
     emojiPicker.addEventListener('click', (e) => {
         if (e.target.classList.contains('emoji-item')) {
@@ -181,39 +185,28 @@ if (emojiBtn && emojiPicker && msgInput) {
             msgInput.focus();
         }
     });
-
+    
     // Optional: click outside to close picker
     document.addEventListener('click', (e) => {
         const clickedInside =
             emojiPicker.contains(e.target) || emojiBtn.contains(e.target);
-        if (!clickedInside) {
-            emojiPicker.classList.add('hidden');
-        }
-    });
-}
-
-
-
-// Message submit
-chatForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const msg = e.target.elements.msg.value.trim();
-    const hasImage = selectedImage !== null;
-    const hasFile = selectedFile !== null;
+            if (!clickedInside) {
+                emojiPicker.classList.add('hidden');
+            }
+        });
+    }
     
-    // Must have either text, image, or file
-    if (!msg && !hasImage && !hasFile) return;
     
-    // Prepare message data
-    const messageData = {
-        text: msg || '',
-        image: hasImage ? selectedImage : null,
-        file: hasFile ? selectedFile : null
-    };
     
-    // Route message based on mode
-    if (window.chatMode === 'group') {
-        groupManager.sendMessage(messageData);
+    // Message submit
+    chatForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const msg = e.target.elements.msg.value.trim();
+        if (!msg) return;
+        
+        // Route message based on mode
+        if (window.chatMode === 'group') {
+            groupManager.sendMessage(msg);
     } else if (window.chatMode === 'dm') {
         dmManager.sendMessage(messageData);
     } else {
@@ -232,16 +225,26 @@ chatForm.addEventListener('submit', (e) => {
     fileBtn.title = 'Upload File';
     e.target.elements.msg.focus();
 });
+
+function loadRoomMessages() {
+    const saved = localStorage.getItem('roomMessages');
+    return saved ? JSON.parse(saved) : [];
+}
+
+function saveRoomMessages() {
+    localStorage.setItem('roomMessages', JSON.stringify(roomMessages));
+}
+
 //SpeakText Jaaa; Pik
 function speakText(text, lang = 'en-US') {
     if (!('speechSynthesis' in window)) {
         alert('Sorry, your browser does not support text to speech.');
         return;
     }
-
+    
     // Stop any ongoing speech
     window.speechSynthesis.cancel();
-
+    
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = lang;  // 'en-US' or 'th-TH'
     window.speechSynthesis.speak(utterance);
@@ -481,6 +484,8 @@ socket.on('updateUserGroup', ({ userId, groupName }) => {
         }
     }
 });
+
+
 
 // Make functions available globally
 window.outputMessage = outputMessage;

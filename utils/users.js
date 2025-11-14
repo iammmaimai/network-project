@@ -42,10 +42,15 @@ function getAllUsers(){
         group: u.group 
     }));
 }
+
+function getUserByUsername(username) {
+    return users.find(user => user.username === username);
+}
 module.exports ={
     userJoin,
     getCurrentUser,
     userLeave,
     getRoomUsers,
-    getAllUsers
+    getAllUsers,
+    getUserByUsername
 }

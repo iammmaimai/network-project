@@ -6,7 +6,10 @@ class GroupManager {
         this.currentGroupId = null ;
         this.myGroups = [];
         this.allGroups = [];
-        this.groupMessages = new Map();
+        this.loadGroups();
+        if (!this.groupMessages) {
+            this.groupMessages = new Map();
+        }
         this.user = user  || { id: socket.id, username: 'Unknown', group: null };
         // Only initialize listeners if DOM elements exist
         if (document.getElementById('create-group-btn')) {
@@ -36,6 +39,8 @@ class GroupManager {
                 this.groupMessages.set(group.id, []);
             }
             this.groupMessages.get(group.id).push(welcomeMessage);
+
+            this.saveGroups();
             
             this.updateMyGroupsList();
             this.switchToGroup(group.id);
@@ -90,6 +95,8 @@ class GroupManager {
             }
             
             this.groupMessages.get(groupId).push(message);
+
+            this.saveGroups();
             
             if (this.currentGroupId === groupId && window.chatMode === 'group') {
                 window.outputMessage(message);
@@ -355,6 +362,19 @@ class GroupManager {
 
     initialize() {
         this.socket.emit('getAllGroups');
+    }
+
+    saveGroups() {
+        const groupObject = Object.fromEntries(this.groupMessages);
+        localStorage.setItem('groupMessages', JSON.stringify(groupObject));
+    }
+
+    loadGroups() {
+        const savedGroups = localStorage.getItem('groupMessages');
+        if (savedGroups) {
+            const groupObject = JSON.parse(savedGroups);
+            this.groupMessages = new Map(Object.entries(groupObject));
+        }
     }
 }
 
