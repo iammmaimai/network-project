@@ -70,6 +70,7 @@ a {
     color: #fff;
     padding: 20px 20px 60px;
     overflow-y: auto;
+    height: 500px;
 }
 
 .chat-sidebar h2 {
@@ -350,6 +351,23 @@ a {
 #total-users-list::-webkit-scrollbar-thumb:hover {
     background: var(--success-color);
 }
+
+.chat-sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-sidebar::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-sidebar::-webkit-scrollbar-thumb {
+    background: var(--dark-color-a);
+    border-radius: 4px;
+    transition: background-color 0.2s ease-out;
+}
+
+
+
 
 /* Groups Lists */
 #my-groups, #all-groups, #group-details-members {
