@@ -206,12 +206,6 @@ io.on('connection', socket =>{
             
             // Broadcast updated group list to all users
             io.emit('groupListUpdated', getAllGroups());
-            
-            // Send welcome message in the group
-            socket.emit('groupMessage', {
-                groupId: group.id,
-                message: formatMessage(botName, `Welcome to ${group.name}! You are the creator.`)
-            });
         }
     });
 

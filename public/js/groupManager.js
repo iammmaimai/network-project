@@ -19,7 +19,18 @@ class GroupManager {
         this.socket.on('groupCreated', (group) => {
             this.myGroups.push(group);
             this.currentGroupId = group.id;
-            this.groupMessages.set(group.id, []);
+            this.allGroups.push(group);
+
+            const welcomeMessage = {
+                username: 'PinguHR', // Or whatever your botName is
+                text: `Welcome to ${group.name}! You are the creator.`,
+                time: new Date().toLocaleTimeString() // Or however you format time
+            };
+
+            if (!this.groupMessages.has(group.id)) {
+                this.groupMessages.set(group.id, []);
+            }
+            this.groupMessages.get(group.id).push(welcomeMessage);
             
             this.updateMyGroupsList();
             this.switchToGroup(group.id);
