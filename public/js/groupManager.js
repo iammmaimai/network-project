@@ -1,17 +1,22 @@
 // groupManager.js - Handles all group chat functionality
 
 class GroupManager {
-    constructor(socket) {
+    constructor(socket,user) {
         this.socket = socket;
-        this.currentGroupId = null;
+        this.currentGroupId = null ;
         this.myGroups = [];
         this.allGroups = [];
         this.groupMessages = new Map();
-        
-        this.initializeEventListeners();
+        this.user = user  || { id: socket.id, username: 'Unknown', group: null };
+        // Only initialize listeners if DOM elements exist
+        if (document.getElementById('create-group-btn')) {
+            this.initializeEventListeners();
+        }
         this.initializeSocketListeners();
     }
-
+    setUser(user) {
+        this.user = user || this.user;
+    }
     // ========== SOCKET LISTENERS ==========
     
     initializeSocketListeners() {
@@ -309,7 +314,11 @@ class GroupManager {
         this.currentGroupId = groupId;
         window.chatMode = 'group';
         
+        this.socket.emit('userGroupUpdated', { userId: this.user.id, groupName: this.user.group });
+
+        this.user.group = group.name
         document.querySelector('.chat-messages').innerHTML = '';
+
         
         const messages = this.groupMessages.get(groupId) || [];
         messages.forEach(msg => window.outputMessage(msg));

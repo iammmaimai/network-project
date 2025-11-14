@@ -331,6 +331,15 @@ io.on('connection', socket =>{
             }
         }
     });
+
+    socket.on('userGroupUpdated', ({ userId, groupName }) => {
+    // Update your server-side user object if needed
+    const user = getAllUsers(userId); // your existing user tracking
+    if (user) user.group = groupName;
+
+    // Broadcast to all clients that a user updated their group
+    io.emit('updateUserGroup', { userId, groupName });
+    });
 })
 
 //PORT

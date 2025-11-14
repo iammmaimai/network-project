@@ -251,6 +251,16 @@ document.getElementById('leave-btn').addEventListener('click', () => {
     }
 });
 
+socket.on('updateUserGroup', ({ userId, groupName }) => {
+    const userLi = document.querySelector(`#total-users-list li[data-id="${userId}"]`);
+    if (userLi) {
+        const roomSpan = userLi.querySelector('.user-room');
+        if (roomSpan) {
+            roomSpan.textContent = `Chat: ${groupName || 'Room'}`;
+        }
+    }
+});
+
 // Make functions available globally
 window.outputMessage = outputMessage;
 window.switchToRoom = switchToRoom;
