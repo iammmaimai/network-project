@@ -28,7 +28,7 @@ const io = socketio(server);
 //set static folder
 app.use(express.static(path.join(__dirname,'public'))); //dirname = current directory 
 
-const botName = "Chatcord HR"
+const botName = "PinguHR"
 
 // Helper function to broadcast server stats to all users
 function broadcastServerStats() {
@@ -55,7 +55,7 @@ io.on('connection', socket =>{
         }
         socket.join(user.room);
         //Welcome current user
-        socket.emit('message', formatMessage(botName , 'Welcome to chatcord')) // emit = only show to the user that login 
+        socket.emit('message', formatMessage(botName , 'Welcome to Pingu TALK!')) // emit = only show to the user that login 
     
         //Broadcast when a user connect 
         socket.broadcast
@@ -164,7 +164,7 @@ io.on('connection', socket =>{
         if (currentUser) {
             const allUsers = getAllUsers()
                 .filter(u => u.id !== socket.id)
-                .map(u => ({ id: u.id, username: u.username, room: u.room }));
+                .map(u => ({ id: u.id, username: u.username, room: u.room, group: u.group||null}));
             
             socket.emit('allUsersList', allUsers);
         }
@@ -182,6 +182,12 @@ io.on('connection', socket =>{
         });
         
         socket.emit('activeRooms', roomCounts);
+    });
+    
+    // Get main room count (for index.html)
+    socket.on('getMainRoomCount', () => {
+        const mainRoomUsers = getRoomUsers('Main Room');
+        socket.emit('mainRoomCount', mainRoomUsers.length);
     });
     
     // Create a new group
@@ -225,6 +231,11 @@ io.on('connection', socket =>{
             if (added) {
                 // Join the socket room
                 socket.join(groupId);
+
+                console.log(user)
+                user.group = group.name
+
+                console.log(user)
                 
                 // Notify user
                 socket.emit('groupJoined', group);
@@ -257,7 +268,7 @@ io.on('connection', socket =>{
             if (removed) {
                 // Leave the socket room
                 socket.leave(groupId);
-                
+
                 // Notify remaining members
                 io.to(groupId).emit('groupMessage', {
                     groupId,

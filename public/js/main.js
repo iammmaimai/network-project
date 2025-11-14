@@ -89,7 +89,7 @@ function outputMessage(message) {
     const p = document.createElement('p');
     p.classList.add('meta');
     p.innerText = message.username;
-    p.innerHTML += `<span>${message.time}</span>`;
+    p.innerHTML += `<span> ${message.time}</span>`;
     div.appendChild(p);
     const para = document.createElement('p');
     para.classList.add('text');
@@ -130,7 +130,7 @@ function outputServerStats(totalUsers, allUsers) {
             li.innerHTML = `
                 <div>
                     <span class="user-name">${user.username}</span>
-                    <span class="user-room">${user.room}</span>
+                    <span class="user-room">${user.group ? "Chat: " + user.group : "Chat: " + user.room}</span>
                 </div>
             `;
             li.dataset.id = user.id;
