@@ -73,6 +73,10 @@ class GroupManager {
             if (!this.groupMessages.has(group.id)) {
                 this.groupMessages.set(group.id, []);
             }
+
+            this.user.group = group.name;
+            this.socket.emit('userGroupUpdated', { userId: this.user.id, groupName: this.user.group });
+
             
             this.updateMyGroupsList();
             this.switchToGroup(group.id);
@@ -323,8 +327,8 @@ class GroupManager {
         const messages = this.groupMessages.get(groupId) || [];
         messages.forEach(msg => window.outputMessage(msg));
         
-        const roomNameEl = document.getElementById('room-name');
-        roomNameEl.innerHTML = `${group.name} <span class="chat-mode-indicator mode-group">GROUP</span>`;
+        // const roomNameEl = document.getElementById('room-name');
+        // roomNameEl.innerHTML = `${group.name} <span class="chat-mode-indicator mode-group">GROUP</span>`;
         
         this.updateMyGroupsList();
     }

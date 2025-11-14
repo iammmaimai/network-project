@@ -228,10 +228,9 @@ io.on('connection', socket =>{
                 // Join the socket room
                 socket.join(groupId);
 
-                console.log(user)
                 user.group = group.name
 
-                console.log(user)
+                io.emit('updateUserGroup', { userId: user.id, groupName: user.group });
                 
                 // Notify user
                 socket.emit('groupJoined', group);
