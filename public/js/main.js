@@ -57,6 +57,10 @@ socket.on('connect', () => {
     if (!window.managersInitialized) {
         groupManager = new GroupManager(socket);
         dmManager = new DMManager(socket);
+
+        window.groupManager = groupManager;
+        window.dmManager = dmManager;
+        
         window.managersInitialized = true;
     }
     // Initialize modals only once
@@ -235,7 +239,14 @@ function switchToRoom() {
     roomMessages.forEach(msg => outputMessage(msg));
     outputRoomName(room);
 
-    socket.emit('updateUserChatContext', { type: 'room' });
+    if (window.groupManager) {
+        window.groupManager.currentGroupId = null;
+        window.groupManager.updateMyGroupsList();
+    }
+    if (window.dmManager) {
+        window.dmManager.currentDmRoom = null;
+        window.dmManager.updateDmList();
+    }
 }
 
 // Click room name to return to room

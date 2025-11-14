@@ -81,7 +81,12 @@ class DMManager {
         this.dmConversations.forEach((data, dmRoomId) => {
             const li = document.createElement('li');
             li.textContent = data.otherUser.username;
-            li.classList.toggle('active', this.currentDmRoom === dmRoomId && window.chatMode === 'dm');
+            // Only add active class if we're in DM mode AND this is the current DM
+            if (this.currentDmRoom === dmRoomId && window.chatMode === 'dm') {
+                li.classList.add('active');
+            } else {
+                li.classList.remove('active');
+            }
             li.addEventListener('click', () => this.switchToDm(dmRoomId));
             list.appendChild(li);
         });
@@ -98,6 +103,11 @@ class DMManager {
         const roomNameEl = document.getElementById('room-name');
         roomNameEl.innerHTML = `DM: ${dmData.otherUser.username} <span class="chat-mode-indicator mode-dm">DM</span>`;
         
+        if (window.groupManager) {
+            window.groupManager.currentGroupId = null;
+            window.groupManager.updateMyGroupsList();
+        }
+
         this.updateDmList();
 
         this.socket.emit('updateUserChatContext', { type: 'dm', name: '' });

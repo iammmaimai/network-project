@@ -179,6 +179,8 @@ class GroupManager {
             
             if (this.currentGroupId === group.id && window.chatMode === 'group') {
                 li.classList.add('active');
+            } else {
+                li.classList.remove('active');
             }
             
             const isCreator = group.creator.id === this.socket.id;
@@ -329,6 +331,13 @@ class GroupManager {
         
         // const roomNameEl = document.getElementById('room-name');
         // roomNameEl.innerHTML = `${group.name} <span class="chat-mode-indicator mode-group">GROUP</span>`;
+        
+                // Clear active state from DMs when switching to group
+        if (window.dmManager) {
+            window.dmManager.currentDmRoom = null;
+            window.dmManager.updateDmList();
+        }
+        
         
         this.updateMyGroupsList();
 
