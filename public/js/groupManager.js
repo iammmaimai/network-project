@@ -149,7 +149,7 @@ class GroupManager {
         list.innerHTML = '';
         
         if (this.myGroups.length === 0) {
-            list.innerHTML = '<li style="color: #99aab5; padding: 10px; text-align: center;">No groups</li>';
+            list.innerHTML = '<li class="no-groups-message" style="color: #99aab5; padding: 10px; text-align: center;">No groups</li>';
             return;
         }
         
@@ -184,7 +184,7 @@ class GroupManager {
         list.innerHTML = '';
         
         if (this.allGroups.length === 0) {
-            list.innerHTML = '<li style="color: #99aab5; padding: 10px; text-align: center;">No groups</li>';
+            list.innerHTML = '<li class="no-groups-message" style="color: #99aab5; padding: 10px; text-align: center;">No groups</li>';
             return;
         }
         

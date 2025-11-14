@@ -388,9 +388,9 @@ a {
     justify-content: space-between;
 }
 
-#my-groups li:hover, #all-groups li:hover {
+#my-groups li:not(.no-groups-message):hover, 
+#all-groups li:not(.no-groups-message):hover { 
     background: var(--accent-color);
-    transform: translateX(5px);
 }
 
 #my-groups li.active {
