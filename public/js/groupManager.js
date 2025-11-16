@@ -111,7 +111,22 @@ class GroupManager {
             this.groupMessages.delete(groupId);
             
             if (this.currentGroupId === groupId) {
-                window.switchToRoom();
+                this.currentGroupId = null;
+                window.chatMode = 'room';
+                this.user.group = null;
+
+                this.socket.emit('userGroupUpdated', { userId: this.user.id, groupName: null });
+                document.querySelector('.chat-messages').innerHTML = '';
+                const roomNameEl = document.getElementById('room-name');
+                if (roomNameEl) {
+                    roomNameEl.textContent = 'Lobby';
+                }
+
+                if (window.switchToRoom) {
+                    window.switchToRoom();
+                }
+
+                this.socket.emit('updateUserChatContext', { type: 'room', name: 'Lobby' });
             }
             
             this.updateMyGroupsList();
@@ -125,7 +140,24 @@ class GroupManager {
             this.groupMessages.delete(groupId);
             
             if (this.currentGroupId === groupId) {
-                window.switchToRoom();
+                this.currentGroupId = null;
+                window.chatMode = 'room';
+                this.user.group = null;
+
+                this.socket.emit('userGroupUpdated', { userId: this.user.id, groupName: null });
+
+                document.querySelector('.chat-messages').innerHTML = '';
+                const roomNameEl = document.getElementById('room-name');
+                if (roomNameEl) {
+                    roomNameEl.textContent = 'Lobby';
+                }
+
+                if (window.switchToRoom) {
+                    window.switchToRoom();
+                }
+
+                this.socket.emit('updateUserChatContext', { type: 'room', name: 'Lobby' });
+        
                 window.showNotification('Group deleted by creator', 'warning');
             }
             
@@ -289,7 +321,7 @@ class GroupManager {
                         // delete old chat
                         const savedGroups = localStorage.getItem('groupMessages');
                         if (savedGroups) {
-                            this.groupMessages.delete(groupId);
+                            this.groupMessages.delete(group.id);
                             this.saveGroups();
                         }
                     }
