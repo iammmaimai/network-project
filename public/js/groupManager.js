@@ -51,7 +51,7 @@ class GroupManager {
         this.socket.on('allGroupsList', (groups) => {
             this.allGroups = groups;
             this.myGroups = groups.filter(g => 
-                g.members.some(m => m.id === this.socket.id)
+                g.members.some(m => m.username === this.user.username)
             );
             
             this.updateMyGroupsList();
@@ -62,7 +62,7 @@ class GroupManager {
         this.socket.on('groupListUpdated', (groups) => {
             this.allGroups = groups;
             this.myGroups = groups.filter(g => 
-                g.members.some(m => m.id === this.socket.id)
+                g.members.some(m => m.username === this.user.username)
             );
             
             this.updateMyGroupsList();
@@ -146,7 +146,7 @@ class GroupManager {
     initializeEventListeners() {
         // Create group button
         document.getElementById('create-group-btn').addEventListener('click', () => {
-            document.getElementById('create-group-modal').style.display = 'block';
+            document.getElementById('create-group-modal').classList.add('is-active');
             document.getElementById('group-name-input').focus();
         });
 
@@ -157,7 +157,7 @@ class GroupManager {
             
             if (groupName) {
                 this.socket.emit('createGroup', { groupName });
-                document.getElementById('create-group-modal').style.display = 'none';
+                document.getElementById('create-group-modal').classList.remove('is-active');
                 document.getElementById('group-name-input').value = '';
             }
         });
@@ -240,8 +240,8 @@ class GroupManager {
 
     showGroupDetails(group) {
         const modal = document.getElementById('group-details-modal');
-        const isMember = group.members.some(m => m.id === this.socket.id);
-        const isCreator = group.creator.id === this.socket.id;
+        const isMember = group.members.some(m => m.username === this.user.username);
+        const isCreator = group.creator.username === this.user.username;
         
         document.getElementById('group-details-name').textContent = group.name;
         document.getElementById('group-details-creator').textContent = group.creator.username;
@@ -251,7 +251,7 @@ class GroupManager {
         membersList.innerHTML = '';
         group.members.forEach(member => {
             const li = document.createElement('li');
-            li.innerHTML = `<span>${member.username} ${member.id === group.creator.id ? '👑' : ''}</span>`;
+            li.innerHTML = `<span>${member.username} ${member.username === group.creator.username ? '👑' : ''}</span>`;
             membersList.appendChild(li);
         });
         
@@ -264,7 +264,7 @@ class GroupManager {
             joinBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Join';
             joinBtn.onclick = () => {
                 this.socket.emit('joinGroup', { groupId: group.id });
-                modal.style.display = 'none';
+                modal.classList.remove('is-active');
             };
             actions.appendChild(joinBtn);
         } else {
@@ -273,7 +273,7 @@ class GroupManager {
             openBtn.innerHTML = '<i class="fas fa-comments"></i> Open';
             openBtn.onclick = () => {
                 this.switchToGroup(group);
-                modal.style.display = 'none';
+                modal.classList.remove('is-active');
             };
             actions.appendChild(openBtn);
             
@@ -284,7 +284,14 @@ class GroupManager {
                 leaveBtn.onclick = () => {
                     if (confirm(`Leave "${group.name}"?`)) {
                         this.socket.emit('leaveGroup', { groupId: group.id });
-                        modal.style.display = 'none';
+                        modal.classList.remove('is-active');
+                        
+                        // delete old chat
+                        const savedGroups = localStorage.getItem('groupMessages');
+                        if (savedGroups) {
+                            this.groupMessages.delete(groupId);
+                            this.saveGroups();
+                        }
                     }
                 };
                 actions.appendChild(leaveBtn);
@@ -295,14 +302,14 @@ class GroupManager {
                 deleteBtn.onclick = () => {
                     if (confirm(`Delete "${group.name}"?`)) {
                         this.socket.emit('deleteGroup', { groupId: group.id });
-                        modal.style.display = 'none';
+                        modal.classList.remove('is-active');
                     }
                 };
                 actions.appendChild(deleteBtn);
             }
         }
         
-        modal.style.display = 'block';
+        modal.classList.add('is-active');
     }
 
     showGroupNotification(groupId) {

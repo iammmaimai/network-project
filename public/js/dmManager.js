@@ -26,10 +26,10 @@ class DMManager {
             
             users.forEach(user => {
                 const li = document.createElement('li');
-                li.textContent = `${user.username} (${user.room})`;
+                li.textContent = `${user.username}`;
                 li.addEventListener('click', () => {
                     this.socket.emit('requestPrivateChat', { targetUsername: user.username });
-                    document.getElementById('dm-modal').style.display = 'none';
+                    document.getElementById('dm-modal').classList.remove('is-active');
                 });
                 list.appendChild(li);
             });
@@ -75,7 +75,7 @@ class DMManager {
     initializeEventListeners() {
         document.getElementById('show-dm-users').addEventListener('click', () => {
             this.socket.emit('getAllUsers');
-            document.getElementById('dm-modal').style.display = 'block';
+            document.getElementById('dm-modal').classList.add('is-active');
         });
     }
 

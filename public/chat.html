@@ -114,12 +114,16 @@
 
       <div class="chat-form-container">
         <form id="chat-form">
-          <input
-            id="msg"
-            type="text"
-            placeholder="Enter Message"
-            autocomplete="off"
-          />
+          
+          <div class="chat-input-wrapper">
+            <div id="file-preview-container"></div>
+            <input
+              id="msg"
+              type="text"
+              placeholder="Enter Message"
+              autocomplete="off"
+            />
+          </div>
       
           <!-- 👇 File upload button -->
           <input type="file" id="file-input" style="display: none;" />

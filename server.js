@@ -121,19 +121,6 @@ io.on('connection', socket =>{
             
             // Broadcast updated server stats to ALL users
             broadcastServerStats();
-            
-            // Handle group disconnects
-            const userGroups = getUserGroups(user.id);
-            userGroups.forEach(group => {
-                removeMemberFromGroup(group.id, user.id);
-                io.to(group.id).emit('groupMessage', {
-                    groupId: group.id,
-                    message: formatMessage(botName, `${user.username} disconnected`)
-                });
-            });
-            
-            // Update group list
-            io.emit('groupListUpdated', getAllGroups());
         }
     })
 

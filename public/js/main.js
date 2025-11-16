@@ -22,6 +22,8 @@ const { username, room } = Qs.parse(location.search, {
     ignoreQueryPrefix: true,
 });
 
+const previewContainer = document.getElementById('file-preview-container');
+
 
 // Global state
 window.chatMode = 'room'; // 'room', 'group', or 'dm'
@@ -59,16 +61,21 @@ socket.on('serverStats', ({ totalUsers, allUsers }) => {
 socket.on('message', message => {
     if (window.chatMode === 'room') {
         outputMessage(message);
-        roomMessages.push(message);
-        saveRoomMessages();
+
+        if (message.username !== 'PinguHR'){
+            roomMessages.push(message);
+            saveRoomMessages();
+        }
     }
 });
 
 // Initialize everything after connection
 socket.on('connect', () => {
     if (!window.managersInitialized) {
-        groupManager = new GroupManager(socket);
-        dmManager = new DMManager(socket);
+        const user = { id: socket.id, username: username };
+
+        groupManager = new GroupManager(socket, user);
+        dmManager = new DMManager(socket, user);
         
         window.groupManager = groupManager;
         window.dmManager = dmManager;
@@ -83,6 +90,22 @@ socket.on('connect', () => {
     // Load groups (can run every connect)
     groupManager.initialize();
 });
+
+if (msgInput && chatForm) {
+    msgInput.addEventListener('keydown', (e) => {
+        // Check if 'Enter' was pressed AND 'Shift' was NOT pressed
+        if (e.key === 'Enter' && !e.shiftKey) {
+            // Prevent the default 'Enter' behavior (which is to add a new line)
+            e.preventDefault(); 
+            
+            // This is the correct way to programmatically submit a form
+            // It will trigger your existing 'chatForm.addEventListener('submit', ...)'
+            chatForm.requestSubmit();
+        }
+        // If they press Shift+Enter, this code does nothing, 
+        // so it will just add a new line (as long as your input is a <textarea>)
+    });
+}
 
 // File upload handler
 if (fileBtn && fileInput) {
@@ -115,9 +138,43 @@ if (fileBtn && fileInput) {
                     name: file.name,
                     size: file.size
                 };
+
+                previewContainer.innerHTML = '';
+
+                // 2. Create the wrapper
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('file-preview-wrapper');
+
+                // 3. Create the info part (icon + name)
+                const info = document.createElement('div');
+                info.classList.add('file-preview-info');
+                info.innerHTML = `<i class="fas fa-file-alt"></i> <span>${file.name}</span>`;
+                
+                // 4. Create the remove button
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.classList.add('file-preview-remove-btn');
+                removeBtn.innerHTML = '&times;';
+
+                // 5. Set the remove logic
+                removeBtn.onclick = () => {
+                    previewContainer.innerHTML = '';  // Clear preview
+                    selectedFile = null;              // Clear selected FILE
+                    fileInput.value = '';             // Reset FILE input
+                    fileBtn.style.background = '';    // Reset FILE button color
+                    fileBtn.title = 'Upload File';    // Reset FILE button title
+                };
+
+                // 6. Assemble the preview
+                wrapper.appendChild(info);
+                wrapper.appendChild(removeBtn);
+                previewContainer.appendChild(wrapper);
+
                 // Show indicator
                 fileBtn.style.background = 'var(--success-color)';
                 fileBtn.title = `${file.name} selected - Click to change`;
+
+                msgInput.focus();
             };
             reader.readAsDataURL(file);
         }
@@ -126,6 +183,7 @@ if (fileBtn && fileInput) {
 
 // Image upload handler
 if (imageBtn && imageInput) {
+
     imageBtn.addEventListener('click', () => {
         imageInput.click();
     });
@@ -136,6 +194,7 @@ if (imageBtn && imageInput) {
             // Validate file type
             if (!file.type.startsWith('image/')) {
                 alert('Please select an image file');
+                imageInput.value = '';
                 return;
             }
             
@@ -160,9 +219,39 @@ if (imageBtn && imageInput) {
                     type: file.type,
                     name: file.name
                 };
+
+                previewContainer.innerHTML = '';
+
+                const wrapper = document.createElement('div');
+                wrapper.classList.add('image-preview-wrapper');
+
+                const previewImg = document.createElement('img');
+                previewImg.src = event.target.result;
+                previewImg.classList.add('image-preview-thumbnail');
+                previewImg.title = file.name;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button'; // Prevents form submission
+                removeBtn.classList.add('image-preview-remove-btn');
+                removeBtn.innerHTML = '&times;';
+
+                removeBtn.onclick = () => {
+                    previewContainer.innerHTML = '';  // Clear preview
+                    selectedImage = null;             // Clear selected IMAGE
+                    imageInput.value = '';            // Reset IMAGE input
+                    imageBtn.style.background = '';   // Reset IMAGE button color
+                    imageBtn.title = 'Upload Image';  // Reset IMAGE button title
+                };
+
+                wrapper.appendChild(previewImg);
+                wrapper.appendChild(removeBtn);
+                previewContainer.appendChild(wrapper);
+
                 // Show preview or indicator
                 imageBtn.style.background = 'var(--success-color)';
                 imageBtn.title = 'Image selected - Click to change';
+                
+                msgInput.focus();
             };
             reader.readAsDataURL(file);
         }
@@ -196,22 +285,30 @@ if (emojiBtn && emojiPicker && msgInput) {
         });
     }
     
-    
-    
     // Message submit
     chatForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const msg = e.target.elements.msg.value.trim();
-        if (!msg) return;
+        const hasImage = selectedImage !== null;
+        const hasFile = selectedFile !== null;
+
+        if (!msg && !selectedFile && !selectedImage) return;
+
+        const messageData = {
+            text: msg || '',
+            image: hasImage ? selectedImage : null,
+            file: hasFile ? selectedFile : null
+        };
         
         // Route message based on mode
         if (window.chatMode === 'group') {
-            groupManager.sendMessage(msg);
-    } else if (window.chatMode === 'dm') {
-        dmManager.sendMessage(messageData);
-    } else {
-        socket.emit('chatMessage', messageData);
-    }
+            groupManager.sendMessage(messageData);
+        } else if (window.chatMode === 'dm') {
+            dmManager.sendMessage(messageData);
+        } else {
+            socket.emit('chatMessage', messageData);
+        }
+        
     
     // Reset form
     e.target.elements.msg.value = '';
@@ -224,6 +321,7 @@ if (emojiBtn && emojiPicker && msgInput) {
     imageBtn.title = 'Upload Image';
     fileBtn.title = 'Upload File';
     e.target.elements.msg.focus();
+    document.getElementById('file-preview-container').innerHTML = '';
 });
 
 function loadRoomMessages() {
@@ -471,6 +569,9 @@ roomName.addEventListener('click', () => {
 document.getElementById('leave-btn').addEventListener('click', () => {
     const leaveRoom = confirm('Are you sure you want to leave the chatroom?');
     if (leaveRoom) {
+        localStorage.removeItem('roomMessages');
+        localStorage.removeItem('groupMessages');
+        localStorage.removeItem('dmConversations');
         window.location = '../index.html';
     }
 });

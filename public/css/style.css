@@ -1036,3 +1036,126 @@ body.join-page .join-main {
         font-size: 24px;
     }
 }
+
+/* Container for the preview */
+/* --- Add this to your main CSS file --- */
+
+/* This is the container in your HTML */
+#file-preview-container {
+    display: flex; /* Allows multiple previews side-by-side */
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 8px; /* Adds space above the text input */
+}
+
+/* This is the new wrapper we'll create with JS */
+.image-preview-wrapper {
+    position: relative; /* Crucial for positioning the 'X' button */
+    width: 100px;
+    height: 100px;
+}
+
+/* The thumbnail image itself */
+.image-preview-thumbnail {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures the image fills the box nicely */
+    border-radius: 8px;
+}
+
+/* The 'X' remove button */
+.image-preview-remove-btn {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    
+    width: 22px;
+    height: 22px;
+    background-color: #585858;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 20px;
+    text-align: center;
+    cursor: pointer;
+    opacity: 0.9;
+    
+    /* Small shadow for depth */
+    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.image-preview-remove-btn:hover {
+    background-color: #dc3545; /* Red on hover */
+    opacity: 1;
+}
+
+#chat-form {
+  display: flex;
+  align-items: flex-end; /* Aligns input/buttons to the bottom */
+  padding: 10px; /* Or whatever your padding is */
+  gap: 10px; /* Space between input box and buttons */
+}
+
+.chat-input-wrapper {
+  flex: 1; /* This makes it take all the available space */
+  display: flex;
+  flex-direction: column; /* Stacks preview on top of input */
+  background-color: #ffffff;
+  border-radius: 8px; /* Rounded corners */
+  padding: 10px;
+}
+
+#msg {
+  border: none; /* Remove old border */
+  outline: none; /* Remove blue glow on click */
+  background-color: transparent; /* Make it invisible */
+  width: 100%;
+  font-size: 16px;
+  padding: 0; /* The wrapper handles the padding now */
+}
+
+#file-preview-container:not(:empty) {
+  margin-bottom: 8px; /* Adds space between the preview and the text input */
+}
+
+.file-preview-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* Pushes button to the right */
+  
+  background-color: #e9ecef; /* A light grey background */
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.file-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  /* Prevent long filenames from overflowing */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-preview-info .fas {
+  color: #555; /* Icon color */
+}
+
+.file-preview-remove-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.3rem;
+  color: #888;
+  cursor: pointer;
+  padding: 0 5px;
+  line-height: 1;
+}
+
+.file-preview-remove-btn:hover {
+  color: #dc3545; /* Red on hover */
+}

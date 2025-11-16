@@ -90,6 +90,13 @@
             }
             window.location.href = `chat.html?username=${encodeURIComponent(username)}&room=Main Room`;
         });
+        usernameInput.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                // Find the button and trigger its click event
+                 document.getElementById('join-main-room').click();
+            }
+        });
 
         // Refresh data periodically
         setInterval(() => {

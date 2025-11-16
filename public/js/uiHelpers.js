@@ -35,14 +35,14 @@ function initializeModals() {
         closeBtn.addEventListener('click', () => {
             const modalId = closeBtn.dataset.modal;
             if (modalId) {
-                document.getElementById(modalId).style.display = 'none';
+                document.getElementById(modalId).classList.remove('is-active');
             }
         });
     });
 
     window.addEventListener('click', (e) => {
         if (e.target.classList.contains('modal')) {
-            e.target.style.display = 'none';
+            e.target.classList.remove('is-active');
         }
     });
 }
